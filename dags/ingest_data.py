@@ -1,6 +1,6 @@
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow import DAG # pyright: ignore[reportMissingImports]
+from airflow.operators.python import PythonOperator # pyright: ignore[reportMissingImports]
+from airflow.providers.postgres.hooks.postgres import PostgresHook # pyright: ignore[reportMissingImports]
 from datetime import datetime
 
 # 1. Hàm chung để chép dữ liệu từ Nguồn -> Staging
@@ -48,7 +48,7 @@ with DAG('01_ingest_raw_data', default_args=default_args, schedule_interval=None
         python_callable=ingest_table,
         op_kwargs={
             'source_conn_id': 'conn_f1_logistics',
-            'source_table': 'public.drivers',      # Đã thêm public. (CHUẨN)
+            'source_table': 'public.drivers',     
             'target_conn_id': 'conn_f1_dwh',
             'target_table': 'staging.drivers'
         }
@@ -96,5 +96,16 @@ with DAG('01_ingest_raw_data', default_args=default_args, schedule_interval=None
             'source_table': 'public.results',
             'target_conn_id': 'conn_f1_dwh',
             'target_table': 'staging.results'
+        }
+    )
+
+    task_load_status = PythonOperator(
+        task_id='load_status',
+        python_callable=ingest_table,
+        op_kwargs={
+            'source_conn_id': 'conn_f1_telemetry',  # Lấy từ Telemetry
+            'source_table': 'public.status',        # Bảng nguồn
+            'target_conn_id': 'conn_f1_dwh',
+            'target_table': 'staging.status'        # Bảng đích
         }
     )
